@@ -14,6 +14,15 @@ GPT4_SPLIT_PATTERN = (
     r"""| ?[^\s\p{L}\p{N}]++[\r\n]*|\s*[\r\n]|\s+(?!\S)|\s+"""
 )
 
+# The special tokens of OpenAI's cl100k_base (GPT-4); pass to register_special_tokens.
+GPT4_SPECIAL_TOKENS = {
+    "<|endoftext|>": 100257,
+    "<|fim_prefix|>": 100258,
+    "<|fim_middle|>": 100259,
+    "<|fim_suffix|>": 100260,
+    "<|endofprompt|>": 100276,
+}
+
 
 class RegexTokenizer(Tokenizer):
     def __init__(self, pattern: str = GPT4_SPLIT_PATTERN) -> None:
@@ -23,6 +32,13 @@ class RegexTokenizer(Tokenizer):
         self._inverse_special: dict[int, str] = {}
 
     def register_special_tokens(self, special_tokens: dict[str, int]) -> None:
+        """Attach special tokens; their ids must not collide with bytes, merges or each other."""
+        ids = list(special_tokens.values())
+        if len(set(ids)) != len(ids):
+            raise ValueError("special token ids must be unique")
+        taken = 256 + len(self.merges)
+        if any(i < taken for i in ids):
+            raise ValueError(f"special token ids must be at least {taken} (bytes plus merges)")
         self.special_tokens = dict(special_tokens)
         self._inverse_special = {v: k for k, v in special_tokens.items()}
         self.vocab = self._build_vocab()
