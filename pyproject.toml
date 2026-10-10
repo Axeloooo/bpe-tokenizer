@@ -1,0 +1,35 @@
+[project]
+name = "bpe-tokenizer"
+version = "0.0.0"
+description = "A byte pair encoding tokenizer, built from scratch in the style of GPT-4."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = ["regex>=2023.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.5", "black>=24", "mypy>=1.10", "types-regex"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.mypy]
+strict = true
+files = ["src", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
