@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from bpe_tokenizer import (
+    GPT4_SPECIAL_TOKENS,
     BasicTokenizer,
     RegexTokenizer,
     Tokenizer,
@@ -122,3 +123,18 @@ def test_save_and_load(make: type[Tokenizer], tmp_path: Path) -> None:
     assert other.merges == tok.merges
     assert other.encode(TEXT) == tok.encode(TEXT)
     assert other.special_tokens == tok.special_tokens
+
+
+def test_special_token_ids_are_validated() -> None:
+    tok = RegexTokenizer()
+    tok.train(TEXT, 300)
+    with pytest.raises(ValueError, match="at least"):
+        tok.register_special_tokens({"<|a|>": 10})  # a byte id
+    with pytest.raises(ValueError, match="at least"):
+        tok.register_special_tokens({"<|a|>": 256})  # a merge id
+    with pytest.raises(ValueError, match="unique"):
+        tok.register_special_tokens({"<|a|>": 400, "<|b|>": 400})
+    tok.register_special_tokens(GPT4_SPECIAL_TOKENS)
+    assert tok.decode(tok.encode("hi<|endoftext|>", allowed_special="all")).endswith(
+        "<|endoftext|>"
+    )

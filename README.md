@@ -23,6 +23,7 @@ classes (`\p{L}`, `\p{N}`) in the GPT-4 split pattern.
 | Regex pre-split so merges never cross word edges  | `RegexTokenizer`, `GPT2_SPLIT_PATTERN`, `GPT4_SPLIT_PATTERN` in `regex_tokenizer.py` |
 | Special tokens such as `<\|endoftext\|>`          | `register_special_tokens`, `encode(allowed_special=...)`                             |
 | Saving and loading a trained tokenizer            | `Tokenizer.save`, `Tokenizer.load` (JSON)                                            |
+| Training from the command line                    | `python -m bpe_tokenizer` in `__main__.py`                                           |
 
 ## Usage
 
@@ -37,6 +38,17 @@ ids = tok.encode("hello world<|endoftext|>", allowed_special="all")
 assert tok.decode(ids) == "hello world<|endoftext|>"
 
 tok.save("tokenizer.json")
+```
+
+Special token ids must be at least `256 + len(merges)` and unique, otherwise
+`register_special_tokens` raises. `GPT4_SPECIAL_TOKENS` holds the ids OpenAI's `cl100k_base` uses.
+
+From the command line:
+
+```
+python -m bpe_tokenizer train corpus.txt --vocab-size 512 --out tokenizer.json
+python -m bpe_tokenizer encode --model tokenizer.json "hello world"
+python -m bpe_tokenizer decode --model tokenizer.json 104 101 108 108 111
 ```
 
 `allowed_special` is `"all"`, `"none"`, `"none_raise"` (the default: error if the text contains a
